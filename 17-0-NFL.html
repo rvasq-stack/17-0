@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>17-0 — NFL All-Time Draft</title>
+<style>
+:root{
+  --bg:#07101d;--panel:#101b2d;--card:#17253a;--line:#2b3d59;
+  --text:#f4f7fb;--muted:#9eacc2;--gold:#e3b341;--green:#57d28b;--red:#ef7777;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(145deg,#06101d,#0b1627 55%,#08111e);
+font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+color:var(--text);min-height:100vh}
+button{font:inherit}
+.app{width:min(920px,calc(100% - 24px));margin:0 auto;padding:24px 0 45px}
+header{display:flex;justify-content:space-between;align-items:end;gap:15px;flex-wrap:wrap;margin-bottom:16px}
+.logo{font-size:44px;font-weight:1000;letter-spacing:-3px;line-height:1}
+.tag{color:var(--muted);font-size:14px;margin-top:5px}
+.record{font-weight:900;color:var(--gold)}
+.panel{background:rgba(16,27,45,.94);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:900}
+h1,h2,h3{margin:5px 0 8px}
+h2{font-size:24px}
+p{line-height:1.55}
+.muted{color:var(--muted)}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}
+.btn{min-height:44px;padding:10px 15px;border-radius:11px;border:1px solid var(--line);
+background:transparent;color:var(--text);font-weight:850;cursor:pointer}
+.btn:hover{border-color:var(--gold)}
+.btn.primary{background:var(--gold);color:#08111d;border-color:var(--gold)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.draw{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.drawbox{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px}
+.drawbox strong{font-size:21px;display:block;margin-top:4px}
+.round{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.pool{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:10px;margin-top:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:13px;
+color:var(--text);text-align:left;width:100%;cursor:pointer}
+.card:hover{border-color:var(--gold);transform:translateY(-1px)}
+.name{font-size:17px;font-weight:900}
+.meta{font-size:12px;color:var(--muted);margin-top:3px}
+.stats{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.stat{font-size:11px;background:rgba(255,255,255,.05);padding:4px 6px;border-radius:6px}
+.stat b{font-size:12px}
+.roster{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px}
+.slot{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:10px;min-height:62px}
+.slot.filled{border-style:solid}
+.pos{font-size:10px;color:var(--muted);font-weight:900}
+.slotname{font-size:13px;font-weight:850;margin-top:4px}
+.notice{font-size:12px;color:var(--muted);margin-top:10px}
+.hidden{display:none!important}
+.defcard{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px;margin-top:10px}
+.result{text-align:center;padding:25px 12px}
+.big{font-size:64px;line-height:1;font-weight:1000;letter-spacing:-4px}
+.perfect{color:var(--green)}
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:7px;margin-top:14px}
+.game{background:var(--card);border-radius:8px;padding:8px 9px;display:flex;justify-content:space-between;font-size:12px}
+.W{color:var(--green);font-weight:900}.L{color:var(--red);font-weight:900}
+hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+@media(max-width:520px){
+ .app{width:min(100% - 16px,920px);padding-top:15px}
+ .logo{font-size:38px}.draw{grid-template-columns:1fr}.pool{grid-template-columns:1fr}.big{font-size:50px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div>
+    <div class="logo">17-0</div>
+    <div class="tag">Build an all-time NFL roster. Chase perfection.</div>
+  </div>
+  <div class="record" id="progress">0 / 12 picks</div>
+</header>
+
+<section id="startScreen" class="panel">
+  <div class="eyebrow">NFL All-Time Draft</div>
+  <h2>Can your roster go 17-0?</h2>
+  <p class="muted">
+    Draft 11 offensive players from random NFL franchise/era pools, then select one complete
+    historical NFL defense. Players are eligible from the entire history of the league.
+  </p>
+  <div class="actions">
+    <button class="btn primary" id="startBtn">Start Draft</button>
+    <button class="btn" id="statsBtn">Stats: ON</button>
+  </div>
+  <div class="notice">
+    Offensive draft: one Team Reroll and one Era Reroll. Defense: one Defense Reroll.
+  </div>
+</section>
+
+<section id="draftScreen" class="hidden">
+  <div class="panel">
+    <div class="round">
+      <div>
+        <div class="eyebrow" id="phase">ROUND 1 OF 11</div>
+        <h2 id="position">QB</h2>
+      </div>
+      <div class="actions">
+        <button class="btn" id="teamReroll">Team Reroll</button>
+        <button class="btn" id="eraReroll">Era Reroll</button>
+      </div>
+    </div>
+    <div class="draw">
+      <div class="drawbox"><div class="eyebrow">Franchise</div><strong id="team">—</strong></div>
+      <div class="drawbox"><div class="eyebrow">Era</div><strong id="era">—</strong></div>
+    </div>
+    <div class="eyebrow">Choose one player</div>
+    <div id="playerPool" class="pool"></div>
+    <div id="draftNotice" class="notice"></div>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">Your Offense</div>
+    <div id="roster" class="roster" style="margin-top:10px"></div>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">Defense</div>
+    <div class="defcard">
+      <b>Locked until all 11 offensive picks are complete.</b>
+      <div class="notice">Your defense will be an entire historical NFL team.</div>
+    </div>
+  </div>
+</section>
+
+<section id="defenseScreen" class="hidden">
+  <div class="panel">
+    <div class="round">
+      <div>
+        <div class="eyebrow">FINAL DRAFT</div>
+        <h2>Choose your all-time defense</h2>
+      </div>
+      <button class="btn" id="defReroll">Defense Reroll</button>
+    </div>
+    <div class="draw">
+      <div class="drawbox"><div class="eyebrow">Franchise</div><strong id="defTeam">—</strong></div>
+      <div class="drawbox"><div class="eyebrow">Season</div><strong id="defEra">—</strong></div>
+    </div>
+    <div id="defPool" class="pool"></div>
+    <div id="defNotice" class="notice"></div>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">Completed Offense</div>
+    <div id="finalRoster" class="roster" style="margin-top:10px"></div>
+  </div>
+</section>
+
+<section id="resultsScreen" class="hidden">
+  <div class="panel result">
+    <div class="eyebrow">SEASON COMPLETE</div>
+    <div id="finalRecord" class="big">—</div>
+    <h2 id="grade">—</h2>
+    <div id="summary" class="muted"></div>
+    <hr>
+    <div id="report" style="text-align:left"></div>
+    <div id="games" class="games"></div>
+    <div class="actions" style="justify-content:center">
+      <button class="btn primary" id="againBtn">Draft Again</button>
+    </div>
+  </div>
+</section>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+const TEAMS = [
+"Arizona Cardinals","Atlanta Falcons","Baltimore Ravens","Buffalo Bills",
+"Carolina Panthers","Chicago Bears","Cincinnati Bengals","Cleveland Browns",
+"Dallas Cowboys","Denver Broncos","Detroit Lions","Green Bay Packers",
+"Houston Texans","Indianapolis Colts","Jacksonville Jaguars","Kansas City Chiefs",
+"Las Vegas Raiders","Los Angeles Chargers","Los Angeles Rams","Miami Dolphins",
+"Minnesota Vikings","New England Patriots","New Orleans Saints","New York Giants",
+"New York Jets","Philadelphia Eagles","Pittsburgh Steelers","San Francisco 49ers",
+"Seattle Seahawks","Tampa Bay Buccaneers","Tennessee Titans","Washington Commanders"
+];
+
+const ERAS=["1960s","1970s","1980s","1990s","2000s","2010s","2020s"];
+
+const POSITIONS=["QB","RB1","RB2","WR1","WR2","WR3","TE","LT","LG","C","RT"];
+
+const PLAYERS={
+QB:[
+["Tom Brady","NE",99],["Joe Montana","SF",98],["Peyton Manning","IND",98],
+["Patrick Mahomes","KC",99],["Aaron Rodgers","GB",98],["Dan Marino","MIA",97],
+["John Elway","DEN",96],["Brett Favre","GB",96],["Drew Brees","NO",97],
+["Steve Young","SF",97],["Roger Staubach","DAL",95],["Johnny Unitas","BAL",96],
+["Otto Graham","CLE",97],["Fran Tarkenton","MIN",94],["Josh Allen","BUF",98],
+["Terry Bradshaw","PIT",95],["Bobby Layne","DET",94],["Bart Starr","GB",95]
+],
+RB:[
+["Jim Brown","CLE",99],["Barry Sanders","DET",99],["Walter Payton","CHI",99],
+["Emmitt Smith","DAL",98],["Adrian Peterson","MIN",97],["LaDainian Tomlinson","SD",97],
+["Eric Dickerson","LAR",97],["Marshall Faulk","STL",97],["Derrick Henry","TEN",96],
+["Earl Campbell","TEN",97],["O.J. Simpson","BUF",96],["Tony Dorsett","DAL",95],
+["Curtis Martin","NYJ",95],["Frank Gore","SF",93],["Christian McCaffrey","CAR",96],
+["Gale Sayers","CHI",97],["Emmitt Smith","DAL",98],["Marcus Allen","OAK",96],
+["Thurman Thomas","BUF",95],["Priest Holmes","KC",94]
+],
+WR:[
+["Jerry Rice","SF",100],["Randy Moss","MIN",99],["Calvin Johnson","DET",98],
+["Terrell Owens","SF",97],["Larry Fitzgerald","ARI",97],["Marvin Harrison","IND",97],
+["Don Hutson","GB",98],["Isaac Bruce","LAR",95],["Cris Carter","MIN",96],
+["Andre Johnson","HOU",95],["Julio Jones","ATL",96],["Tyreek Hill","KC",97],
+["Davante Adams","GB",97],["Sterling Sharpe","GB",95],["Steve Largent","SEA",95],
+["Art Monk","WAS",94],["Antonio Brown","PIT",96],["Michael Irvin","DAL",96],
+["Terrell Owens","SF",97],["Tim Brown","OAK",95],["Herman Moore","DET",94],
+["Andre Reed","BUF",94],["Isaac Bruce","LAR",95]
+],
+TE:[
+["Rob Gronkowski","NE",99],["Tony Gonzalez","KC",98],["Travis Kelce","KC",98],
+["Antonio Gates","LAC",96],["Shannon Sharpe","DEN",95],["Jason Witten","DAL",94],
+["Kellen Winslow","CLE",96],["Ozzie Newsome","CLE",95],["Mike Ditka","CHI",94],
+["George Kittle","SF",96],["John Mackey","BAL",97],["Gronkowski","NE",99]
+],
+OL:[
+["Anthony Munoz","CIN",99],["Jonathan Ogden","BAL",98],["Walter Jones","SEA",98],
+["Orlando Pace","LAR",97],["Willie Roaf","NO",97],["Bruce Matthews","HOU",98],
+["Larry Allen","DAL",99],["John Hannah","NE",99],["Gene Upshaw","OAK",97],
+["Zack Martin","DAL",97],["Joe Thomas","CLE",98],["Tyron Smith","DAL",94],
+["Travis Frederick","DAL",96],["Dwight Stephenson","MIA",98],["Jim Parker","BAL",99],
+["Forrest Gregg","GB",97],["Jason Kelce","PHI",97],["Nick Mangold","NYJ",94],
+["Alan Faneca","PIT",96],["Steve Hutchinson","SEA",96],["Mike Webster","PIT",98],
+["Will Shields","KC",96],["Randy White","DAL",94]
+]
+};
+
+const DEFENSES=[
+["1985 Chicago Bears","Chicago Bears",100,"Historic front seven, elite turnovers and a dominant scoring defense."],
+["2000 Baltimore Ravens","Baltimore Ravens",100,"Historically dominant scoring defense and run defense."],
+["1976 Pittsburgh Steelers","Pittsburgh Steelers",98,"The Steel Curtain at full strength."],
+["1986 New York Giants","New York Giants",97,"Elite pass rush and championship-level front."],
+["2013 Seattle Seahawks","Seattle Seahawks",99,"Legion of Boom paired with an elite front."],
+["2015 Denver Broncos","Denver Broncos",99,"Elite secondary and devastating pass rush."],
+["2002 Tampa Bay Buccaneers","Tampa Bay Buccaneers",97,"Takeaways, coverage and a dominant front."],
+["2019 New England Patriots","New England Patriots",96,"Turnovers and suffocating coverage."],
+["2024 Philadelphia Eagles","Philadelphia Eagles",95,"Deep defensive front and disruptive pass rush."],
+["1991 Philadelphia Eagles","Philadelphia Eagles",98,"One of the most dominant units of the era."],
+["1972 Miami Dolphins","Miami Dolphins",96,"Perfect-season defense with balanced personnel."],
+["1994 San Francisco 49ers","San Francisco 49ers",94,"Fast, physical championship defense."],
+["1989 San Francisco 49ers","San Francisco 49ers",94,"Complete championship defensive unit."],
+["1996 Green Bay Packers","Green Bay Packers",93,"Physical front and excellent secondary."],
+["1975 Pittsburgh Steelers","Pittsburgh Steelers",99,"Elite Steel Curtain unit."]
+];
+
+const CODE={
+"Arizona Cardinals":"ARI","Atlanta Falcons":"ATL","Baltimore Ravens":"BAL","Buffalo Bills":"BUF",
+"Carolina Panthers":"CAR","Chicago Bears":"CHI","Cincinnati Bengals":"CIN","Cleveland Browns":"CLE",
+"Dallas Cowboys":"DAL","Denver Broncos":"DEN","Detroit Lions":"DET","Green Bay Packers":"GB",
+"Houston Texans":"HOU","Indianapolis Colts":"IND","Jacksonville Jaguars":"JAX","Kansas City Chiefs":"KC",
+"Las Vegas Raiders":"LV","Los Angeles Chargers":"LAC","Los Angeles Rams":"LAR","Miami Dolphins":"MIA",
+"Minnesota Vikings":"MIN","New England Patriots":"NE","New Orleans Saints":"NO","New York Giants":"NYG",
+"New York Jets":"NYJ","Philadelphia Eagles":"PHI","Pittsburgh Steelers":"PIT","San Francisco 49ers":"SF",
+"Seattle Seahawks":"SEA","Tampa Bay Buccaneers":"TB","Tennessee Titans":"TEN","Washington Commanders":"WAS"
+};
+
+const $=id=>document.getElementById(id);
+const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+let state;
+
+function reset(){
+ state={
+  round:0,team:null,era:null,roster:{},
+  teamReroll:true,eraReroll:true,defReroll:true,
+  showStats:true,defense:null
+ };
+}
+
+function typeFor(pos){
+ if(pos==="QB")return"QB";
+ if(pos.startsWith("RB"))return"RB";
+ if(pos.startsWith("WR"))return"WR";
+ if(pos==="TE")return"TE";
+ return"OL";
+}
+
+function drawOffense(){
+ state.team=pick(TEAMS);
+ state.era=pick(ERAS);
+ renderDraft();
+}
+
+function getCandidates(pos){
+ const type=typeFor(pos);
+ const code=CODE[state.team];
+ const source=PLAYERS[type];
+ let matching=source.filter(x=>x[1]===code);
+ let others=source.filter(x=>x[1]!==code);
+ let pool=shuffle([...matching,...others.slice(0,Math.max(8,5-matching.length))]);
+ const seen=new Set();
+ pool=pool.filter(x=>{if(seen.has(x[0]))return false;seen.add(x[0]);return true});
+ return shuffle(pool).slice(0,5);
+}
+
+function renderDraft(){
+ const pos=POSITIONS[state.round];
+ $("phase").textContent=`ROUND ${state.round+1} OF 11`;
+ $("position").textContent=pos;
+ $("team").textContent=state.team;
+ $("era").textContent=state.era;
+ $("progress").textContent=`${state.round} / 12 picks`;
+ $("teamReroll").disabled=!state.teamReroll;
+ $("eraReroll").disabled=!state.eraReroll;
+
+ const pool=$("playerPool");
+ pool.innerHTML="";
+ getCandidates(pos).forEach(p=>{
+  const b=document.createElement("button");
+  b.type="button";b.className="card";
+  b.innerHTML=`<div class="name">${p[0]}</div>
+    <div class="meta">${p[1]} · ${state.era}</div>
+    ${state.showStats?`<div class="stats"><span class="stat">OVR <b>${p[2]}</b></span>
+    <span class="stat">Peak <b>${Math.max(88,p[2]-3)}</b></span></div>`:""}`;
+  b.addEventListener("click",()=>choosePlayer(p,pos));
+  pool.appendChild(b);
+ });
+ $("draftNotice").textContent="Select one player to continue.";
+}
+
+function choosePlayer(p,pos){
+ state.roster[pos]={name:p[0],team:p[1],ovr:p[2]};
+ state.round++;
+ renderRoster("roster");
+ if(state.round<11)drawOffense();
+ else startDefense();
+}
+
+function renderRoster(id){
+ const el=$(id);el.innerHTML="";
+ POSITIONS.forEach(pos=>{
+  const s=document.createElement("div");
+  s.className="slot "+(state.roster[pos]?"filled":"");
+  s.innerHTML=`<div class="pos">${pos}</div><div class="slotname">${state.roster[pos]?.name||"Open"}</div>`;
+  el.appendChild(s);
+ });
+}
+
+function startDefense(){
+ $("draftScreen").classList.add("hidden");
+ $("defenseScreen").classList.remove("hidden");
+ renderRoster("finalRoster");
+ drawDefense();
+}
+
+function drawDefense(){
+ const featured=pick(DEFENSES);
+ const options=shuffle(DEFENSES.filter(x=>x!==featured)).slice(0,3);
+ const all=shuffle([featured,...options]);
+ $("defTeam").textContent=featured[1];
+ $("defEra").textContent=featured[0].match(/\d{4}/)?.[0]||"Historical";
+ $("defPool").innerHTML="";
+ all.forEach(d=>{
+  const b=document.createElement("button");
+  b.type="button";b.className="card";
+  b.innerHTML=`<div class="name">${d[0]}</div>
+   <div class="meta">Defense OVR ${d[2]}</div>
+   <div class="notice">${d[3]}</div>`;
+  b.addEventListener("click",()=>selectDefense(d));
+  $("defPool").appendChild(b);
+ });
+ $("defNotice").textContent=state.defReroll?"Choose a complete historical defense.":"Defense reroll used — choose your defense.";
+}
+
+function selectDefense(d){
+ state.defense=d;
+ $("defenseScreen").classList.add("hidden");
+ simulate();
+}
+
+function simulate(){
+ const off=Object.values(state.roster);
+ const avg=off.reduce((a,x)=>a+x.ovr,0)/off.length;
+ const qb=state.roster.QB.ovr;
+ const ol=["LT","LG","C","RT"].map(p=>state.roster[p].ovr);
+ const skillPlayers=["RB1","RB2","WR1","WR2","WR3","TE"].map(p=>state.roster[p].ovr);
+ const olAvg=ol.reduce((a,x)=>a+x,0)/ol.length;
+ const skillAvg=skillPlayers.reduce((a,x)=>a+x,0)/skillPlayers.length;
+
+ let strength=avg*.48+qb*.17+olAvg*.17+skillAvg*.10+state.defense[2]*.08;
+ let chemistry=0;
+ const teams=new Set(off.map(x=>x.team));
+ if(teams.size>=7)chemistry+=1.1;
+ if(teams.size<=4)chemistry-=.6;
+ if(["WR1","WR2","WR3"].every(p=>state.roster[p]))chemistry+=.6;
+ if(state.defense[2]>=98)chemistry+=1.1;
+ strength+=chemistry;
+
+ let wins=0,games=[];
+ for(let week=1;week<=17;week++){
+   const opponent=72+Math.random()*24;
+   const home=(week%2===0)?1.0:0;
+   const variance=Math.random()*11-5.5;
+   const margin=strength-opponent+home+variance;
+   const win=margin>0;
+   games.push({win,margin});
+   if(win)wins++;
+ }
+ showResults(wins,17-wins,strength,chemistry,games);
+}
+
+function showResults(wins,losses,strength,chemistry,games){
+ $("resultsScreen").classList.remove("hidden");
+ $("progress").textContent=`${wins}-${losses}`;
+ $("finalRecord").textContent=`${wins}-${losses}`;
+ $("finalRecord").className="big "+(wins===17?"perfect":"");
+
+ let grade=wins===17?"PERFECT SEASON":wins>=15?"ELITE":wins>=12?"CONTENDER":wins>=9?"PLAYOFF TEAM":wins>=6?"COMPETITIVE":"REBUILD";
+ $("grade").textContent=grade;
+ $("summary").textContent=`Roster strength ${Math.round(strength)}/100 · Chemistry ${chemistry>=0?"+":""}${chemistry.toFixed(1)}`;
+
+ const sorted=Object.values(state.roster).sort((a,b)=>b.ovr-a.ovr).slice(0,5);
+ $("report").innerHTML=`
+ <div class="eyebrow">ROSTER REPORT</div>
+ <p class="muted">
+ <b style="color:var(--text)">Top offensive ratings:</b>
+ ${sorted.map(x=>`${x.name} (${x.ovr})`).join(" · ")}<br>
+ <b style="color:var(--text)">Defense:</b> ${state.defense[0]} (${state.defense[2]})<br>
+ <b style="color:var(--text)">Chemistry:</b> ${chemistry>=1?"Strong roster fit and defensive boost.":chemistry<0?"Some roster redundancy reduced the team bonus.":"Solid overall roster construction."}
+ </p>`;
+
+ const gamesEl=$("games");gamesEl.innerHTML="";
+ games.forEach((g,i)=>{
+  const d=document.createElement("div");d.className="game";
+  d.innerHTML=`<span>Week ${i+1}</span><span class="${g.win?"W":"L"}">${g.win?"W":"L"}</span>`;
+  gamesEl.appendChild(d);
+ });
+}
+
+$("startBtn").addEventListener("click",()=>{
+ reset();
+ $("startScreen").classList.add("hidden");
+ $("draftScreen").classList.remove("hidden");
+ renderRoster("roster");
+ drawOffense();
+});
+
+$("statsBtn").addEventListener("click",()=>{
+ state.showStats=!state.showStats;
+ $("statsBtn").textContent=`Stats: ${state.showStats?"ON":"OFF"}`;
+ if(state.team)renderDraft();
+});
+
+$("teamReroll").addEventListener("click",()=>{
+ if(!state.teamReroll)return;
+ state.teamReroll=false;
+ state.team=pick(TEAMS);
+ renderDraft();
+ $("draftNotice").textContent="Team reroll used.";
+});
+
+$("eraReroll").addEventListener("click",()=>{
+ if(!state.eraReroll)return;
+ state.eraReroll=false;
+ state.era=pick(ERAS);
+ renderDraft();
+ $("draftNotice").textContent="Era reroll used.";
+});
+
+$("defReroll").addEventListener("click",()=>{
+ if(!state.defReroll)return;
+ state.defReroll=false;
+ drawDefense();
+ $("defReroll").disabled=true;
+});
+
+$("againBtn").addEventListener("click",()=>{
+ $("resultsScreen").classList.add("hidden");
+ $("startScreen").classList.remove("hidden");
+ $("progress").textContent="0 / 12 picks";
+});
+
+reset();
+})();
+</script>
+</body>
+</html>
